@@ -21,8 +21,8 @@ export async function POST(request: Request) {
 
     const manifest = parser.manifest;
 
-    let variants = [];
-    let audioTracks = [];
+    let variants: any[] = [];
+    let audioTracks: any[] = [];
 
     // If it's a Master Playlist
     if (manifest.playlists && manifest.playlists.length > 0) {
@@ -44,18 +44,23 @@ export async function POST(request: Request) {
     }
 
     // Extract audio tracks
-    if (manifest.mediaGroups?.AUDIO) {
-      audioTracks = Object.keys(manifest.mediaGroups.AUDIO).flatMap(groupName => {
-        const group = manifest.mediaGroups.AUDIO[groupName];
-        return Object.keys(group).map(lang => ({
-          id: `${groupName}-${lang}`,
-          name: group[lang].name || lang,
-          language: group[lang].language || lang,
-          uri: group[lang].uri ? new URL(group[lang].uri, url).href : null,
-          default: group[lang].default
-        }));
+    const audioGroups = manifest.mediaGroups?.AUDIO;
+    if (audioGroups) {
+      audioTracks = Object.keys(audioGroups).flatMap(groupName => {
+        const group = audioGroups[groupName];
+        return Object.keys(group).map(lang => {
+          const track = group[lang] as any;
+          return {
+            id: `${groupName}-${lang}`,
+            name: track.name || lang,
+            language: track.language || lang,
+            uri: track.uri ? new URL(track.uri, url).href : null,
+            default: track.default
+          };
+        });
       });
     }
+
 
 
     return NextResponse.json({
